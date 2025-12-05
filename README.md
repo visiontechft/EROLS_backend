@@ -58,8 +58,8 @@ erols_backend/
 ### **DevOps**
 
 * Docker
-* Render / Railway / OVH (selon déploiement)
-* GitHub Actions (CI/CD – optionnel)
+* Render 
+* GitHub Actions 
 
 ---
 
@@ -232,15 +232,6 @@ Chaque contribution apporte une pierre au pont numérique entre le Cameroun et l
 
 # 📞 **Contact**
 
-📧 [support@visiontech.cm](mailto:support@visiontech.cm)
+📧 [visiontech.ft@gmail.com](mailto:support@visiontech.cm)
 🌍 [www.erols.cm](http://www.erols.cm) (à venir)
 
----
-
-Si tu veux, je peux te :
-✔️ Ajouter un badge GitHub
-✔️ Ajouter la partie "Roadmap 2025"
-✔️ Ajouter un guide pour les pull requests
-✔️ Ajouter un schéma d’architecture visuel (ASCII)
-
-Souhaites-tu une version encore plus complète ?
