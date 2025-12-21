@@ -1,15 +1,25 @@
-# ========== .gitignore ==========
+# Python
 *.pyc
 __pycache__/
 *.sqlite3
+
+# Environnement
 .env
-media/
-staticfiles/
-*.log
-db.sqlite3
+venv/
+*.venv/
+
+# IDE
 .vscode/
 .idea/
-*.venv
-venv/
-# ou si c'est .venv
-.venv/
+
+# Django
+media/
+staticfiles/
+db.sqlite3
+
+# Logs
+*.log
+
+# Docker Dev (non poussé)
+docker-compose.dev.yml
+Dockerfile.dev
