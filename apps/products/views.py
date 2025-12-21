@@ -1,56 +1,80 @@
-# ========== apps/products/views.py ==========
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Category, Product, SpecialRequest
-from .serializers import (CategorySerializer, ProductListSerializer, 
-                          ProductDetailSerializer, SpecialRequestSerializer)
+from django.db.models import Q
+from .models import Category, Product
+from .serializers import CategorySerializer, ProductSerializer
+
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Category.objects.filter(is_active=True, parent=None)
+    """
+    ViewSet pour les catégories
+    """
+    queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
     lookup_field = 'slug'
+    permission_classes = [AllowAny]
+
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet pour les produits
+    """
     queryset = Product.objects.filter(is_available=True)
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'category__parent']
-    search_fields = ['name', 'description']
-    ordering_fields = ['price_cameroon', 'created_at', 'sales_count']
+    serializer_class = ProductSerializer
     lookup_field = 'slug'
-    
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return ProductDetailSerializer
-        return ProductListSerializer
-    
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.views_count += 1
-        instance.save(update_fields=['views_count'])
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category__slug']
+    search_fields = ['name', 'description']
+    ordering_fields = ['price', 'name', 'created_at']
+    ordering = ['-created_at']
     
     @action(detail=False, methods=['get'])
-    def featured(self, request):
-        featured = self.queryset.order_by('-sales_count')[:10]
-        serializer = self.get_serializer(featured, many=True)
+    def search(self, request):
+        """Recherche de produits"""
+        query = request.query_params.get('q', '')
+        if not query:
+            return Response([])
+        
+        products = self.queryset.filter(
+            Q(name__icontains=query) | 
+            Q(description__icontains=query)
+        )[:20]
+        
+        serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def best_sellers(self, request):
-        best_sellers = self.queryset.order_by('-sales_count')[:20]
-        serializer = self.get_serializer(best_sellers, many=True)
-        return Response(serializer.data)
-
-class SpecialRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = SpecialRequestSerializer
-    permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return SpecialRequest.objects.filter(user=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        """Filtrage personnalisé"""
+        queryset = super().get_queryset()
+        
+        # Filtrer par catégorie
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category__slug=category)
+        
+        # Filtrer par prix
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+        
+        # Trier
+        sort_by = self.request.query_params.get('sort_by')
+        if sort_by:
+            sort_mapping = {
+                'price_asc': 'price',
+                'price_desc': '-price',
+                'name_asc': 'name',
+                'name_desc': '-name',
+                'newest': '-created_at',
+            }
+            order = sort_mapping.get(sort_by, '-created_at')
+            queryset = queryset.order_by(order)
+        
+        return queryset

@@ -10,3 +10,7 @@ celery
 redis
 djangorestframework-simplejwt
 drf-spectacular
+django-extensions
+django-allauth
+dj-rest-auth
+dj-rest-auth[with_social]

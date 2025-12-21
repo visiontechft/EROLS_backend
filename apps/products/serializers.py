@@ -1,46 +1,36 @@
-# ========== apps/products/serializers.py ==========
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, SpecialRequest
+from .models import Category, Product
+
 
 class CategorySerializer(serializers.ModelSerializer):
-    children = serializers.SerializerMethodField()
+    product_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'description', 'image', 'parent', 'children', 'is_active']
+        fields = ['id', 'name', 'slug', 'description', 'is_active', 'product_count']
     
-    def get_children(self, obj):
-        if obj.children.exists():
-            return CategorySerializer(obj.children.filter(is_active=True), many=True).data
-        return []
+    def get_product_count(self, obj):
+        return obj.products.filter(is_available=True).count()
 
-class ProductImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductImage
-        fields = ['id', 'image', 'order']
 
-class ProductListSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
-    
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'slug', 'main_image', 'price_china', 'price_cameroon', 
-                  'category_name', 'is_available', 'stock']
-
-class ProductDetailSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    images = ProductImageSerializer(many=True, read_only=True)
+    image_url = serializers.SerializerMethodField()
+    in_stock = serializers.BooleanField(read_only=True)
     
     class Meta:
         model = Product
-        fields = '__all__'
-
-class SpecialRequestSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.username', read_only=True)
+        fields = [
+            'id', 'name', 'slug', 'description', 
+            'price', 'image_url', 'stock', 'in_stock',
+            'is_available', 'category', 
+            'created_at', 'updated_at'
+        ]
     
-    class Meta:
-        model = SpecialRequest
-        fields = ['id', 'user', 'user_name', 'product_name', 'description', 'image', 
-                  'url_reference', 'quantity', 'status', 'estimated_price', 'admin_notes', 'created_at']
-        read_only_fields = ['user', 'status', 'estimated_price', 'admin_notes']
-
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
