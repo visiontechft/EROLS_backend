@@ -14,6 +14,11 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://erols-backend.onrender.com',
+    'https://*.onrender.com',  # Pour tous les sous-domaines Render
+]
+
 # HTTPS et sécurité (désactivé en dev, activé en prod)
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
@@ -24,6 +29,11 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+    CSRF_TRUSTED_ORIGINS.extend([
+        'https://erols.netlify.app',
+        'https://*.netlify.app',
+    ])
 
 # ========== APPLICATIONS ==========
 INSTALLED_APPS = [
