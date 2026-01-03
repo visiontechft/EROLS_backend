@@ -4,6 +4,8 @@ Configuration Django pour le projet EROLS E-commerce
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+import dj_database_url
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -68,6 +70,7 @@ AUTH_USER_MODEL = 'users.User'
 # ========== MIDDLEWARE ==========
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -101,18 +104,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # ========== BASE DE DONNÉES ==========
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='erols_db'),
-        'USER': config('POSTGRES_USER', default='erols_user'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='erols_pass'),
-        'HOST': config('DB_HOST', default='db'),
-        'PORT': config('DB_PORT', default='5432'),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {
-            'connect_timeout': 10,
-        }
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='postgresql://erols_user:erols_pass@db:5432/erols_db'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # ========== VALIDATION DES MOTS DE PASSE ==========
@@ -238,6 +234,7 @@ SWAGGER_SETTINGS = {
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ========== LOGGING ==========
+# ========== LOGGING ==========
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -252,29 +249,19 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
-
-# Créer le dossier logs s'il n'existe pas
-(BASE_DIR / 'logs').mkdir(exist_ok=True)
 
 # ========== DIVERS ==========
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
