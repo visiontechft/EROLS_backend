@@ -16,7 +16,6 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
 # HTTPS et sécurité (désactivé en dev, activé en prod)
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
