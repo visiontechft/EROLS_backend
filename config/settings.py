@@ -191,7 +191,7 @@ SIMPLE_JWT = {
 # ========== CORS ==========
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173'
+    default='http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,https://erols.netlify.app'
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True

@@ -34,4 +34,8 @@ docker-compose -f docker-compose.dev.yml up -d
 # Redémarrer un conteneur spécifique
 docker restart erols_backend-backend-1
 ```
+# copie du fichier dans docker
+docker cp seed_products.py erols_backend-backend-1:/app/
 
+# execution
+docker exec -it erols_backend-backend-1 python seed_products.py
