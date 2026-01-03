@@ -18,10 +18,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie du code source
 COPY . .
 
-# Collecte des fichiers statiques (important pour Render)
-RUN python manage.py collectstatic --noinput || true
+# Copie et rend exécutable le script de démarrage
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 EXPOSE 8000
 
-# Commande par défaut (Render peut la surcharger)
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
+# Utilise le script de démarrage
+CMD ["/app/start.sh"]
