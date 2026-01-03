@@ -1,17 +1,37 @@
-Django
+# Django Core
+Django>=4.2,<5.0
 djangorestframework
+
+# API Documentation
 drf-yasg
-django-cors-headers
-django-filter
-psycopg2-binary
-python-decouple
-Pillow
-celery
-redis
-djangorestframework-simplejwt
 drf-spectacular
-django-extensions
+
+# Authentication & Authorization
+djangorestframework-simplejwt
 django-allauth
 dj-rest-auth
 dj-rest-auth[with_social]
+
+# CORS & Filtering
+django-cors-headers
+django-filter
+
+# Database & Configuration
+psycopg2-binary
+dj-database-url
+python-decouple
+
+# Static Files Management
+whitenoise
+
+# Production Server
+gunicorn
+
+# Background Tasks
+celery
+redis
+
+# Utilities
+Pillow
 requests
+django-extensions
