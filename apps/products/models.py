@@ -1,6 +1,7 @@
 # apps/products/models.py
 from django.db import models
 from cloudinary.models import CloudinaryField
+from cloudinary import CloudinaryImage  # ← Ajoutez cette ligne
 
 
 class Category(models.Model):
@@ -68,7 +69,7 @@ class Product(models.Model):
     def get_image_thumbnail(self, width=300, height=300):
         """Génère une miniature de l'image"""
         if self.image:
-            return cloudinary.CloudinaryImage(self.image.public_id).build_url(
+            return CloudinaryImage(self.image.public_id).build_url(  # ← Utilisez CloudinaryImage directement
                 width=width,
                 height=height,
                 crop='fill',
