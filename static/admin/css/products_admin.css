@@ -1,0 +1,54 @@
+/* Styles pour l'admin des produits avec Cloudinary */
+
+/* Amélioration de l'affichage de la miniature dans la liste */
+.field-image_thumbnail {
+    padding: 5px !important;
+}
+
+/* Style pour le champ d'image dans le formulaire */
+.field-image {
+    margin-bottom: 20px;
+}
+
+.field-image .cloudinary-fileupload {
+    padding: 10px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+/* Aperçu de l'image dans le formulaire */
+.field-image_preview img {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.field-image_preview img:hover {
+    transform: scale(1.02);
+}
+
+/* Améliorer l'affichage du lien Cloudinary */
+.field-image_preview a {
+    font-size: 12px;
+    color: #417690;
+    text-decoration: none;
+}
+
+.field-image_preview a:hover {
+    text-decoration: underline;
+}
+
+/* Badge pour les produits en rupture de stock */
+.field-stock {
+    font-weight: bold;
+}
+
+tr.row1 .field-stock,
+tr.row2 .field-stock {
+    color: #333;
+}
+
+/* Indicateur visuel pour les produits indisponibles */
+.field-is_available input[type="checkbox"]:not(:checked) + label {
+    color: #999;
+}
