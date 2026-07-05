@@ -1,30 +1,55 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: erols_postgres
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - erols_network
 
   redis:
     image: redis:7-alpine
+    container_name: erols_redis
+    restart: always
+    networks:
+      - erols_network
 
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+  web:
+    build: .
+    container_name: erols_web
+    restart: always
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
     ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - redis
+      - "127.0.0.1:8083:8000"
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - erols_network
+
+networks:
+  erols_network:
+    driver: bridge
 
 volumes:
   postgres_data:
