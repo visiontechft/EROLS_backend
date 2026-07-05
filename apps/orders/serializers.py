@@ -4,7 +4,7 @@ from apps.products.models import Product
 
 
 class CitySerializer(serializers.ModelSerializer):
-    """Serializer pour les villes disponibles"""
+    """Serializer pour les quartiers disponibles"""
     class Meta:
         model = City
         fields = ['id', 'name', 'whatsapp_number', 'display_order']
@@ -188,6 +188,6 @@ class OrderHistorySerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'product_name', 'product_price', 'quantity',
-            'city_name', 'status', 'status_display',
+            'city_name', 'whatsapp_number', 'status', 'status_display',
             'created_at', 'updated_at'
         ]

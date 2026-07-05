@@ -12,7 +12,7 @@ class CityAdmin(admin.ModelAdmin):
     ordering = ['display_order', 'name']
     
     fieldsets = (
-        ('Informations de la ville', {
+        ('Informations du quartier', {
             'fields': ('name', 'whatsapp_number', 'is_active', 'display_order')
         }),
     )
