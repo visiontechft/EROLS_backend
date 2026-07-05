@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
-from .social_views import GoogleLoginView, FacebookLoginView
+from .social_views import GoogleLoginView
 
 app_name = 'users'
 
@@ -17,5 +17,4 @@ urlpatterns = [
     
     # Authentification sociale (OAuth)
     path('auth/google/', GoogleLoginView.as_view(), name='google-login'),
-    path('auth/facebook/', FacebookLoginView.as_view(), name='facebook-login'),
 ]
