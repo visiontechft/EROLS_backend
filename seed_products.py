@@ -9,7 +9,6 @@ import django
 from django.utils.text import slugify
 from django.core.files.base import ContentFile
 import requests
-from io import BytesIO
 
 # Configuration Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
@@ -93,7 +92,7 @@ def create_categories_and_products():
                     print(f"  ✓ Produit créé sans image: {product.name}")
             else:
                 print(f"  ✓ Produit créé: {product.name}")
-    
+
     # ==========================================================
     # CATÉGORIE 2 : MODE & VÊTEMENTS
     # ==========================================================
@@ -151,7 +150,7 @@ def create_categories_and_products():
                     print(f"  ✓ Produit créé avec image: {product.name}")
                 else:
                     print(f"  ✓ Produit créé sans image: {product.name}")
-    
+
     # ==========================================================
     # CATÉGORIE 3 : MAISON & ÉLECTROMÉNAGER
     # ==========================================================
@@ -207,7 +206,7 @@ def create_categories_and_products():
                     filename = f"{product.slug}.jpg"
                     product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
-    
+
     # ==========================================================
     # CATÉGORIE 4 : BEAUTÉ & SOINS
     # ==========================================================
@@ -263,7 +262,7 @@ def create_categories_and_products():
                     filename = f"{product.slug}.jpg"
                     product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
-    
+
     # ==========================================================
     # CATÉGORIE 5 : JOUETS & ENFANTS
     # ==========================================================
@@ -319,7 +318,7 @@ def create_categories_and_products():
                     filename = f"{product.slug}.jpg"
                     product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
-    
+
     # ==========================================================
     # STATISTIQUES FINALES
     # ==========================================================
