@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import Category, Product
 
 
+def _absolute_image_url(obj, request):
+    """Construit une URL absolue pour l'image (media local), sinon renvoie le placeholder"""
+    if not obj.image:
+        return obj.image_url
+    return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+
+
 class CategorySerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
     
@@ -30,12 +37,12 @@ class ProductListSerializer(serializers.ModelSerializer):
         ]
     
     def get_image_url(self, obj):
-        """Retourne l'URL complète de l'image depuis Cloudinary"""
-        return obj.image_url
-    
+        """Retourne l'URL complète de l'image"""
+        return _absolute_image_url(obj, self.context.get('request'))
+
     def get_thumbnail_url(self, obj):
-        """Retourne l'URL d'une miniature optimisée"""
-        return obj.get_image_thumbnail(width=300, height=300)
+        """Retourne l'URL de l'image (pas de miniature dédiée)"""
+        return _absolute_image_url(obj, self.context.get('request'))
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -69,19 +76,19 @@ class ProductSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         """URL originale de l'image"""
-        return obj.image_url
-    
+        return _absolute_image_url(obj, self.context.get('request'))
+
     def get_thumbnail_url(self, obj):
-        """Miniature 300x300 pour les vignettes"""
-        return obj.get_image_thumbnail(width=300, height=300)
-    
+        """Pas de miniature dédiée : renvoie l'image originale"""
+        return _absolute_image_url(obj, self.context.get('request'))
+
     def get_medium_image_url(self, obj):
-        """Image moyenne 600x600 pour les galeries"""
-        return obj.get_image_thumbnail(width=600, height=600)
-    
+        """Pas de variante dédiée : renvoie l'image originale"""
+        return _absolute_image_url(obj, self.context.get('request'))
+
     def get_large_image_url(self, obj):
-        """Grande image 1200x1200 pour les détails"""
-        return obj.get_image_thumbnail(width=1200, height=1200)
+        """Pas de variante dédiée : renvoie l'image originale"""
+        return _absolute_image_url(obj, self.context.get('request'))
 
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):

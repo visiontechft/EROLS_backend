@@ -14,6 +14,10 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
+# Le backend tourne derriere nginx (VPS) ou un proxy TLS (Render) :
+# fait confiance au header X-Forwarded-Proto pour detecter le HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 CSRF_TRUSTED_ORIGINS = [
     'https://erols-backend.onrender.com',
     'https://*.onrender.com',  # Pour tous les sous-domaines Render
