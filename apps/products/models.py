@@ -1,7 +1,5 @@
 # apps/products/models.py
 from django.db import models
-from cloudinary.models import CloudinaryField
-from cloudinary import CloudinaryImage  # ← Ajoutez cette ligne
 
 
 class Category(models.Model):
@@ -28,16 +26,11 @@ class Product(models.Model):
     # Prix
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Image stockée sur Cloudinary
-    image = CloudinaryField(
-        'image',
-        folder='products/',  # Dossier dans Cloudinary
+    # Image stockée localement (media/products/)
+    image = models.ImageField(
+        upload_to='products/',
         blank=True,
         null=True,
-        transformation={
-            'quality': 'auto',
-            'fetch_format': 'auto'
-        }
     )
     
     # Disponibilité
@@ -67,13 +60,5 @@ class Product(models.Model):
         return 'https://via.placeholder.com/400x400?text=No+Image'
     
     def get_image_thumbnail(self, width=300, height=300):
-        """Génère une miniature de l'image"""
-        if self.image:
-            return CloudinaryImage(self.image.public_id).build_url(  # ← Utilisez CloudinaryImage directement
-                width=width,
-                height=height,
-                crop='fill',
-                quality='auto',
-                fetch_format='auto'
-            )
+        """Retourne l'URL de l'image (pas de redimensionnement côté serveur)"""
         return self.image_url

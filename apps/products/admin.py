@@ -69,7 +69,7 @@ class ProductAdmin(admin.ModelAdmin):
                 <div style="margin-top: 10px;">
                     <img src="{}" style="max-width: 400px; max-height: 400px; border: 1px solid #ddd; border-radius: 4px; padding: 5px;" />
                     <p style="margin-top: 10px; color: #666;">
-                        <strong>URL Cloudinary:</strong><br/>
+                        <strong>URL de l'image:</strong><br/>
                         <a href="{}" target="_blank" style="word-break: break-all;">{}</a>
                     </p>
                 </div>

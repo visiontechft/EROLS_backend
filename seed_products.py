@@ -7,21 +7,24 @@ import os
 import sys
 import django
 from django.utils.text import slugify
+from django.core.files.base import ContentFile
+import requests
 
 # Configuration Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-import cloudinary.uploader
 from apps.products.models import Category, Product
 
-def upload_image_from_url(url):
-    """Televerse une image sur Cloudinary depuis une URL distante"""
+def download_image(url, timeout=10):
+    """Télécharge une image depuis une URL"""
     try:
-        result = cloudinary.uploader.upload(url, folder='products')
-        return result.get('public_id')
+        response = requests.get(url, timeout=timeout, stream=True)
+        if response.status_code == 200:
+            return ContentFile(response.content)
+        return None
     except Exception as e:
-        print(f"  ⚠️  Erreur upload image: {e}")
+        print(f"  ⚠️  Erreur téléchargement image: {e}")
         return None
 
 def create_categories_and_products():
@@ -80,10 +83,10 @@ def create_categories_and_products():
         
         if created or not product.image:
             if image_url:
-                public_id = upload_image_from_url(image_url)
-                if public_id:
-                    product.image = public_id
-                    product.save()
+                image_content = download_image(image_url)
+                if image_content:
+                    filename = f"{product.slug}.jpg"
+                    product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
                 else:
                     print(f"  ✓ Produit créé sans image: {product.name}")
@@ -140,10 +143,10 @@ def create_categories_and_products():
         
         if created or not product.image:
             if image_url:
-                public_id = upload_image_from_url(image_url)
-                if public_id:
-                    product.image = public_id
-                    product.save()
+                image_content = download_image(image_url)
+                if image_content:
+                    filename = f"{product.slug}.jpg"
+                    product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
                 else:
                     print(f"  ✓ Produit créé sans image: {product.name}")
@@ -198,10 +201,10 @@ def create_categories_and_products():
         
         if created or not product.image:
             if image_url:
-                public_id = upload_image_from_url(image_url)
-                if public_id:
-                    product.image = public_id
-                    product.save()
+                image_content = download_image(image_url)
+                if image_content:
+                    filename = f"{product.slug}.jpg"
+                    product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
 
     # ==========================================================
@@ -254,10 +257,10 @@ def create_categories_and_products():
         
         if created or not product.image:
             if image_url:
-                public_id = upload_image_from_url(image_url)
-                if public_id:
-                    product.image = public_id
-                    product.save()
+                image_content = download_image(image_url)
+                if image_content:
+                    filename = f"{product.slug}.jpg"
+                    product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
 
     # ==========================================================
@@ -310,10 +313,10 @@ def create_categories_and_products():
         
         if created or not product.image:
             if image_url:
-                public_id = upload_image_from_url(image_url)
-                if public_id:
-                    product.image = public_id
-                    product.save()
+                image_content = download_image(image_url)
+                if image_content:
+                    filename = f"{product.slug}.jpg"
+                    product.image.save(filename, image_content, save=True)
                     print(f"  ✓ Produit créé avec image: {product.name}")
 
     # ==========================================================
