@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.facebook',
 
     # dj-rest-auth
     'dj_rest_auth',
@@ -319,34 +318,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'VERIFIED_EMAIL': True,
-        'FETCH_USERINFO': True,  # ✅ Ajouter cette ligne
-        
+        'FETCH_USERINFO': True,
     },
-    'facebook': {
-        'METHOD': 'oauth2',
-        'SCOPE': ['email', 'public_profile'],
-        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-        'INIT_PARAMS': {'cookie': True},
-        'FIELDS': [
-            'id',
-            'first_name',
-            'last_name',
-            'middle_name',
-            'name',
-            'name_format',
-            'picture',
-            'short_name',
-            'email',
-        ],
-        'EXCHANGE_TOKEN': True,
-        'VERIFIED_EMAIL': False,
-        'VERSION': 'v18.0',
-        'APP': {
-            'client_id': config('FACEBOOK_CLIENT_ID', default=''),
-            'secret': config('FACEBOOK_CLIENT_SECRET', default=''),
-            'key': ''
-        }
-    }
 }
 
 # Adapter la création d'utilisateur pour notre modèle custom

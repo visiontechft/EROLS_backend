@@ -50,14 +50,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             user.last_name = extra_data.get('family_name', '')
             user.email = extra_data.get('email', '')
             user.is_verified = extra_data.get('email_verified', False)
-        
-        # Facebook
-        elif sociallogin.account.provider == 'facebook':
-            user.first_name = extra_data.get('first_name', '')
-            user.last_name = extra_data.get('last_name', '')
-            user.email = extra_data.get('email', '')
-            user.is_verified = True  # Facebook vérifie toujours les emails
-        
+
         # Générer un username unique à partir de l'email
         if not user.username and user.email:
             base_username = user.email.split('@')[0]
