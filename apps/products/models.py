@@ -54,10 +54,10 @@ class Product(models.Model):
     
     @property
     def image_url(self):
-        """Retourne l'URL de l'image ou une image par défaut"""
+        """Retourne l'URL de l'image, ou None si aucune image (le frontend affiche un placeholder local)"""
         if self.image:
             return self.image.url
-        return 'https://via.placeholder.com/400x400?text=No+Image'
+        return None
     
     def get_image_thumbnail(self, width=300, height=300):
         """Retourne l'URL de l'image (pas de redimensionnement côté serveur)"""
