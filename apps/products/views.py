@@ -3,7 +3,6 @@ from decimal import Decimal, InvalidOperation
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
 from .models import Category, Product, ProductImage
 from .permissions import IsStaffOrReadOnly
 from .serializers import (
@@ -58,12 +57,17 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_available=True).select_related('category')
     lookup_field = 'slug'
     permission_classes = [IsStaffOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category__slug', 'is_available']
+    filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description']
-    ordering_fields = ['price', 'created_at', 'name']
-    ordering = ['-created_at']
-    
+
+    SORT_MAP = {
+        'price_asc': 'price',
+        'price_desc': '-price',
+        'name_asc': 'name',
+        'name_desc': '-name',
+        'newest': '-created_at',
+    }
+
     def get_serializer_class(self):
         """Utilise différents serializers selon l'action"""
         if self.action == 'list':
@@ -71,25 +75,35 @@ class ProductViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return ProductCreateUpdateSerializer
         return ProductSerializer
-    
+
     def get_queryset(self):
         """Filtre personnalisé des produits"""
         queryset = super().get_queryset()
-        
+
+        # Filtrer par catégorie (slug)
+        category_slug = self.request.query_params.get('category')
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+
         # Filtrer par prix
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
-        
+
         if min_price:
             queryset = queryset.filter(price__gte=min_price)
         if max_price:
             queryset = queryset.filter(price__lte=max_price)
-        
+
         # Filtrer par disponibilité en stock
         in_stock_only = self.request.query_params.get('in_stock')
         if in_stock_only and in_stock_only.lower() == 'true':
             queryset = queryset.filter(stock__gt=0)
-        
+
+        # Tri
+        sort_by = self.request.query_params.get('sort_by')
+        if sort_by in self.SORT_MAP:
+            queryset = queryset.order_by(self.SORT_MAP[sort_by])
+
         return queryset
     
     @action(detail=False, methods=['get'])
