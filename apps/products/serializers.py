@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product
+from .models import Category, Product, ProductImage
 
 
 def _absolute_image_url(obj, request):
@@ -7,6 +7,22 @@ def _absolute_image_url(obj, request):
     if not obj.image:
         return obj.image_url
     return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    """Une image de la galerie d'un produit"""
+    url = serializers.SerializerMethodField()
+    is_primary = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'url', 'alt_text', 'is_primary', 'order']
+
+    def get_url(self, obj):
+        return _absolute_image_url(obj, self.context.get('request'))
+
+    def get_is_primary(self, obj):
+        return obj.order == 0
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,16 +73,17 @@ class ProductSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
     medium_image_url = serializers.SerializerMethodField()
     large_image_url = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
     in_stock = serializers.BooleanField(read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'description', 
+            'id', 'name', 'slug', 'description',
             'price', 'stock', 'in_stock', 'is_available',
             'category', 'category_id',
-            'image', 'image_url', 'thumbnail_url', 
-            'medium_image_url', 'large_image_url',
+            'image', 'image_url', 'thumbnail_url',
+            'medium_image_url', 'large_image_url', 'images',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['slug', 'created_at', 'updated_at']

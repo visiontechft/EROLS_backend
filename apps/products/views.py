@@ -2,12 +2,14 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Category, Product
+from .models import Category, Product, ProductImage
+from .permissions import IsStaffOrReadOnly
 from .serializers import (
-    CategorySerializer, 
-    ProductSerializer, 
+    CategorySerializer,
+    ProductSerializer,
     ProductListSerializer,
-    ProductCreateUpdateSerializer
+    ProductCreateUpdateSerializer,
+    ProductImageSerializer
 )
 
 
@@ -53,6 +55,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.filter(is_available=True).select_related('category')
     lookup_field = 'slug'
+    permission_classes = [IsStaffOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category__slug', 'is_available']
     search_fields = ['name', 'description']
@@ -115,3 +118,28 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         serializer = ProductListSerializer(related_products, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='images')
+    def upload_images(self, request, slug=None):
+        """Ajoute une ou plusieurs images à la galerie du produit"""
+        product = self.get_object()
+        files = request.FILES.getlist('images')
+        if not files:
+            return Response({'error': 'Aucune image fournie'}, status=400)
+
+        start_order = product.images.count()
+        created = [
+            ProductImage.objects.create(product=product, image=f, order=start_order + i)
+            for i, f in enumerate(files)
+        ]
+        serializer = ProductImageSerializer(created, many=True, context={'request': request})
+        return Response(serializer.data, status=201)
+
+    @action(detail=True, methods=['delete'], url_path=r'images/(?P<image_id>\d+)')
+    def delete_image(self, request, slug=None, image_id=None):
+        """Supprime une image de la galerie du produit"""
+        product = self.get_object()
+        deleted, _ = product.images.filter(id=image_id).delete()
+        if not deleted:
+            return Response({'error': 'Image introuvable'}, status=404)
+        return Response(status=204)

@@ -1,6 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Product
+from .models import Category, Product, ProductImage
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ['image', 'alt_text', 'order']
 
 
 @admin.register(Category)
@@ -26,7 +32,8 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     list_editable = ['price', 'stock', 'is_available']
     readonly_fields = ['created_at', 'updated_at', 'image_preview']
-    
+    inlines = [ProductImageInline]
+
     fieldsets = (
         ('Informations de base', {
             'fields': ('name', 'slug', 'description', 'category')
