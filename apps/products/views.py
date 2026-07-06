@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -143,3 +145,33 @@ class ProductViewSet(viewsets.ModelViewSet):
         if not deleted:
             return Response({'error': 'Image introuvable'}, status=404)
         return Response(status=204)
+
+    @action(detail=False, methods=['post'], url_path='bulk-price-update')
+    def bulk_price_update(self, request):
+        """Applique une marge sur les prix en masse (pourcentage ou montant fixe),
+        sur tous les produits ou sur une seule catégorie."""
+        mode = request.data.get('mode')
+        if mode not in ('percent', 'fixed'):
+            return Response({'error': 'mode doit être "percent" ou "fixed"'}, status=400)
+
+        try:
+            value = Decimal(str(request.data.get('value')))
+        except (TypeError, InvalidOperation):
+            return Response({'error': 'Valeur invalide'}, status=400)
+
+        queryset = Product.objects.all()
+        category_id = request.data.get('category_id')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        updated = 0
+        for product in queryset:
+            if mode == 'percent':
+                new_price = product.price * (Decimal('1') + value / Decimal('100'))
+            else:
+                new_price = product.price + value
+            product.price = max(new_price, Decimal('0')).quantize(Decimal('1'))
+            product.save(update_fields=['price'])
+            updated += 1
+
+        return Response({'updated': updated})
