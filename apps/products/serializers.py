@@ -39,19 +39,23 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     """Serializer simplifié pour les listes de produits"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
     in_stock = serializers.BooleanField(read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 
+            'id', 'name', 'slug',
             'price', 'image_url', 'thumbnail_url',
             'stock', 'in_stock', 'is_available',
-            'category_name'
+            'category_name', 'category',
         ]
-    
+
+    def get_category(self, obj):
+        return {'id': obj.category_id, 'name': obj.category.name, 'slug': obj.category.slug}
+
     def get_image_url(self, obj):
         """Retourne l'URL complète de l'image"""
         return _absolute_image_url(obj, self.context.get('request'))

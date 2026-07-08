@@ -10,7 +10,8 @@ from .serializers import (
     ProductSerializer,
     ProductListSerializer,
     ProductCreateUpdateSerializer,
-    ProductImageSerializer
+    ProductImageSerializer,
+    _absolute_image_url,
 )
 
 
@@ -122,6 +123,56 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'], url_path='featured-per-category')
+    def featured_per_category(self, request):
+        """Retourne un produit vedette (le plus recent, avec photo) par categorie active."""
+        results = []
+        for category in Category.objects.filter(is_active=True).order_by('name'):
+            product = (
+                category.products
+                .filter(is_available=True, stock__gt=0)
+                .exclude(image='')
+                .order_by('-created_at')
+                .first()
+            )
+            if product:
+                results.append(product)
+        serializer = ProductListSerializer(results, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    # Vraies marques presentes dans le catalogue (pas de "partenariat" invente) :
+    # on ne montre que celles ayant au moins un produit reel en stock.
+    KNOWN_BRANDS = [
+        'OSCAR', 'HISENSE', 'MIDEA', 'INNOVA', 'TOBI', 'FODEG Star', 'GIFTMAX',
+        'Sylver Crest', 'STAR-X', 'STARX', 'Light Wave', 'JBL', 'Grious', 'DORAGYM',
+        'RMG', 'VISION', 'SAMSUNG', 'LG', 'SONAR', 'Hoffmans',
+    ]
+
+    @action(detail=False, methods=['get'])
+    def brands(self, request):
+        """Retourne les marques reellement presentes dans le catalogue actuel,
+        avec le nombre de produits et une photo representative."""
+        queryset = self.get_queryset()
+        results = []
+        seen_upper = set()
+        for brand in self.KNOWN_BRANDS:
+            key = brand.upper()
+            if key in seen_upper:
+                continue
+            matches = queryset.filter(name__icontains=brand)
+            count = matches.count()
+            if count == 0:
+                continue
+            seen_upper.add(key)
+            sample = matches.exclude(image='').first()
+            results.append({
+                'name': brand,
+                'product_count': count,
+                'image_url': _absolute_image_url(sample, request) if sample else None,
+            })
+        results.sort(key=lambda b: -b['product_count'])
+        return Response(results)
+
     @action(detail=True, methods=['get'])
     def related(self, request, slug=None):
         """Retourne des produits similaires (même catégorie)"""
