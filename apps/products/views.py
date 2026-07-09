@@ -311,7 +311,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='bulk-price-update')
     def bulk_price_update(self, request):
         """Applique une marge sur les prix en masse (pourcentage ou montant fixe),
-        sur tous les produits ou sur une seule catégorie."""
+        sur tous les produits, une seule catégorie, et/ou une tranche de prix
+        (min_price/max_price, inclusifs) — utile pour appliquer un barème par palier."""
         mode = request.data.get('mode')
         if mode not in ('percent', 'fixed'):
             return Response({'error': 'mode doit être "percent" ou "fixed"'}, status=400)
@@ -325,6 +326,20 @@ class ProductViewSet(viewsets.ModelViewSet):
         category_id = request.data.get('category_id')
         if category_id:
             queryset = queryset.filter(category_id=category_id)
+
+        min_price = request.data.get('min_price')
+        if min_price not in (None, ''):
+            try:
+                queryset = queryset.filter(price__gte=Decimal(str(min_price)))
+            except InvalidOperation:
+                return Response({'error': 'min_price invalide'}, status=400)
+
+        max_price = request.data.get('max_price')
+        if max_price not in (None, ''):
+            try:
+                queryset = queryset.filter(price__lte=Decimal(str(max_price)))
+            except InvalidOperation:
+                return Response({'error': 'max_price invalide'}, status=400)
 
         updated = 0
         for product in queryset:
