@@ -352,3 +352,49 @@ class ProductViewSet(viewsets.ModelViewSet):
             updated += 1
 
         return Response({'updated': updated})
+
+    @action(detail=False, methods=['post'], url_path='bulk-price-tiers')
+    def bulk_price_tiers(self, request):
+        """Applique un barème de paliers de prix en UNE SEULE passe : chaque
+        produit est évalué une seule fois contre son prix ACTUEL (avant toute
+        modification de cette requête) pour trouver son palier, puis reçoit le
+        bonus correspondant, une seule fois.
+
+        C'est le pendant sûr de bulk-price-update appelé palier par palier :
+        appliquer les paliers un par un peut faire "changer de tranche" un
+        produit après un ajustement (ex. 300F +300 -> 600F) et le faire
+        re-matcher par le palier suivant (500-1499F) lors d'un appel séparé,
+        doublant l'ajustement. Ici, tous les paliers sont fournis en une seule
+        requête et chaque produit ne peut matcher qu'un seul palier (le premier
+        dont l'intervalle le contient), donc aucun double ajustement possible.
+        """
+        tiers_data = request.data.get('tiers')
+        if not isinstance(tiers_data, list) or not tiers_data:
+            return Response({'error': 'tiers doit être une liste non vide'}, status=400)
+
+        tiers = []
+        for t in tiers_data:
+            try:
+                min_price = Decimal(str(t['min_price'])) if t.get('min_price') not in (None, '') else None
+                max_price = Decimal(str(t['max_price'])) if t.get('max_price') not in (None, '') else None
+                bonus = Decimal(str(t['bonus']))
+            except (KeyError, TypeError, InvalidOperation):
+                return Response({'error': 'palier invalide'}, status=400)
+            tiers.append((min_price, max_price, bonus))
+
+        queryset = Product.objects.all()
+        category_id = request.data.get('category_id')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        updated = 0
+        for product in queryset:
+            price = product.price
+            for min_price, max_price, bonus in tiers:
+                if (min_price is None or price >= min_price) and (max_price is None or price <= max_price):
+                    product.price = max(price + bonus, Decimal('0')).quantize(Decimal('1'))
+                    product.save(update_fields=['price'])
+                    updated += 1
+                    break
+
+        return Response({'updated': updated})
