@@ -161,7 +161,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
+        # 100/hour was far too low for a public catalog: browsing (pagination,
+        # search-as-you-type, hover/touch prefetch on categories and products)
+        # easily exceeds that in a few minutes for a single anonymous visitor,
+        # and checkout no longer requires an account, so most real traffic is
+        # anonymous by design. 1000/hour matches the authenticated rate.
+        'anon': '1000/hour',
         'user': '1000/hour',
     },
     'DEFAULT_RENDERER_CLASSES': [
