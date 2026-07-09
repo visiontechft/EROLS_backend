@@ -24,26 +24,33 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     
     # Prix
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    
+    price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
+
     # Image stockée localement (media/products/)
     image = models.ImageField(
         upload_to='products/',
         blank=True,
         null=True,
     )
-    
+
     # Disponibilité
-    stock = models.IntegerField(default=0)
-    is_available = models.BooleanField(default=True)
-    
+    stock = models.IntegerField(default=0, db_index=True)
+    is_available = models.BooleanField(default=True, db_index=True)
+
     # Dates
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+        indexes = [
+            # Couvre le filtre le plus frequent : produits disponibles d'une
+            # categorie, tries par recence (liste boutique, featured-per-category).
+            models.Index(fields=['category', 'is_available', '-created_at'], name='product_cat_avail_created_idx'),
+            # Couvre le filtre stock>0 utilise par featured/popular/in_stock=true.
+            models.Index(fields=['is_available', 'stock'], name='product_avail_stock_idx'),
+        ]
+
     def __str__(self):
         return self.name
     

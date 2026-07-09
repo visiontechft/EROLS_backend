@@ -82,6 +82,7 @@ AUTH_USER_MODEL = 'users.User'
 # ========== MIDDLEWARE ==========
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -174,6 +175,29 @@ if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append(
         'rest_framework.renderers.BrowsableAPIRenderer'
     )
+
+# ========== CACHE (Redis) ==========
+# Par défaut, pointe vers le service "redis" du docker-compose (réseau interne
+# erols_network) — fonctionne sans configuration .env supplémentaire sur le VPS.
+# En DEBUG sans Redis joignable, retombe sur un cache mémoire du process.
+REDIS_URL = config('REDIS_URL', default=None if DEBUG else 'redis://redis:6379/0')
+CACHE_KEY_PREFIX = 'erols'
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'KEY_PREFIX': CACHE_KEY_PREFIX,
+            'TIMEOUT': 300,  # 5 min par défaut ; chaque vue précise sa propre durée
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'KEY_PREFIX': CACHE_KEY_PREFIX,
+        }
+    }
 
 # ========== JWT CONFIGURATION ==========
 SIMPLE_JWT = {

@@ -1,8 +1,11 @@
 from decimal import Decimal, InvalidOperation
 
+from django.core.cache import cache
+from django.db.models import OuterRef, Subquery
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from .cache import TTL_DETAIL, TTL_MEDIUM, TTL_SHORT, versioned_key
 from .models import Category, Product, ProductImage
 from .permissions import IsStaffOrReadOnly
 from .serializers import (
@@ -15,32 +18,66 @@ from .serializers import (
 )
 
 
+def _featured_per_category_queryset():
+    """One product per active category (most recent, in stock, with a photo),
+    fetched in 2 queries total instead of 1-per-category (N+1)."""
+    latest_id_per_category = (
+        Product.objects
+        .filter(category=OuterRef('pk'), is_available=True, stock__gt=0)
+        .exclude(image='')
+        .order_by('-created_at')
+        .values('id')[:1]
+    )
+    category_ids = (
+        Category.objects
+        .filter(is_active=True)
+        .annotate(featured_product_id=Subquery(latest_id_per_category))
+        .exclude(featured_product_id=None)
+        .values_list('featured_product_id', flat=True)
+    )
+    return (
+        Product.objects
+        .filter(id__in=list(category_ids))
+        .select_related('category')
+        .order_by('category__name')
+    )
+
+
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet pour les catégories (lecture seule)
-    
+
     list: Retourne toutes les catégories actives
     retrieve: Retourne une catégorie spécifique avec ses produits
     """
     queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
     lookup_field = 'slug'
-    
+
+    def list(self, request, *args, **kwargs):
+        key = versioned_key('categories', 'list')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        response = super().list(request, *args, **kwargs)
+        cache.set(key, response.data, TTL_MEDIUM)
+        return response
+
     @action(detail=True, methods=['get'])
     def products(self, request, slug=None):
         """Retourne tous les produits d'une catégorie"""
         category = self.get_object()
-        products = category.products.filter(is_available=True)
-        
+        products = category.products.filter(is_available=True).select_related('category')
+
         # Filtrage optionnel
         min_price = request.query_params.get('min_price')
         max_price = request.query_params.get('max_price')
-        
+
         if min_price:
             products = products.filter(price__gte=min_price)
         if max_price:
             products = products.filter(price__lte=max_price)
-        
+
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -107,37 +144,57 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return queryset
     
+    def retrieve(self, request, *args, **kwargs):
+        slug = kwargs.get(self.lookup_url_kwarg or self.lookup_field)
+        key = versioned_key('product', 'detail', slug)
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        response = super().retrieve(request, *args, **kwargs)
+        cache.set(key, response.data, TTL_DETAIL)
+        return response
+
+    def _featured_queryset(self):
+        return self.get_queryset().filter(stock__gt=0)[:8]
+
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """Retourne les produits mis en avant (les plus récents avec stock)"""
-        products = self.get_queryset().filter(stock__gt=0)[:8]
-        serializer = ProductListSerializer(products, many=True, context={'request': request})
+        key = versioned_key('products', 'featured')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        serializer = ProductListSerializer(self._featured_queryset(), many=True, context={'request': request})
+        cache.set(key, serializer.data, TTL_SHORT)
         return Response(serializer.data)
-    
+
+    def _popular_queryset(self):
+        # Pour l'instant, produits avec le moins de stock restant (proxy de vente
+        # rapide) ; a remplacer par un vrai compteur de ventes des qu'il existe.
+        return self.get_queryset().order_by('stock')[:8]
+
     @action(detail=False, methods=['get'])
     def popular(self, request):
         """Retourne les produits populaires (basé sur le stock vendu)"""
-        # Pour l'instant, on retourne les produits avec le moins de stock
-        # Plus tard, vous pourrez implémenter un système de comptage des ventes
-        products = self.get_queryset().order_by('stock')[:8]
-        serializer = ProductListSerializer(products, many=True, context={'request': request})
+        key = versioned_key('products', 'popular')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        serializer = ProductListSerializer(self._popular_queryset(), many=True, context={'request': request})
+        cache.set(key, serializer.data, TTL_SHORT)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['get'], url_path='featured-per-category')
     def featured_per_category(self, request):
         """Retourne un produit vedette (le plus recent, avec photo) par categorie active."""
-        results = []
-        for category in Category.objects.filter(is_active=True).order_by('name'):
-            product = (
-                category.products
-                .filter(is_available=True, stock__gt=0)
-                .exclude(image='')
-                .order_by('-created_at')
-                .first()
-            )
-            if product:
-                results.append(product)
-        serializer = ProductListSerializer(results, many=True, context={'request': request})
+        key = versioned_key('products', 'featured-per-category')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        serializer = ProductListSerializer(
+            _featured_per_category_queryset(), many=True, context={'request': request}
+        )
+        cache.set(key, serializer.data, TTL_SHORT)
         return Response(serializer.data)
 
     # Vraies marques presentes dans le catalogue (pas de "partenariat" invente) :
@@ -148,10 +205,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         'RMG', 'VISION', 'SAMSUNG', 'LG', 'SONAR', 'Hoffmans',
     ]
 
-    @action(detail=False, methods=['get'])
-    def brands(self, request):
-        """Retourne les marques reellement presentes dans le catalogue actuel,
-        avec le nombre de produits et une photo representative."""
+    def _brands_data(self, request):
         queryset = self.get_queryset()
         results = []
         seen_upper = set()
@@ -171,19 +225,62 @@ class ProductViewSet(viewsets.ModelViewSet):
                 'image_url': _absolute_image_url(sample, request) if sample else None,
             })
         results.sort(key=lambda b: -b['product_count'])
-        return Response(results)
+        return results
+
+    @action(detail=False, methods=['get'])
+    def brands(self, request):
+        """Retourne les marques reellement presentes dans le catalogue actuel,
+        avec le nombre de produits et une photo representative."""
+        key = versioned_key('products', 'brands')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        data = self._brands_data(request)
+        cache.set(key, data, TTL_MEDIUM)
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def homepage(self, request):
+        """Agrege en un seul appel tout ce dont la page d'accueil a besoin
+        (featured, popular, vedette par categorie, categories, marques) —
+        remplace 5 aller-retours reseau par 1 seul."""
+        key = versioned_key('products', 'homepage')
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+
+        ctx = {'request': request}
+        data = {
+            'featured': ProductListSerializer(self._featured_queryset(), many=True, context=ctx).data,
+            'popular': ProductListSerializer(self._popular_queryset(), many=True, context=ctx).data,
+            'featured_per_category': ProductListSerializer(
+                _featured_per_category_queryset(), many=True, context=ctx
+            ).data,
+            'categories': CategorySerializer(
+                Category.objects.filter(is_active=True), many=True, context=ctx
+            ).data,
+            'brands': self._brands_data(request),
+        }
+        cache.set(key, data, TTL_SHORT)
+        return Response(data)
 
     @action(detail=True, methods=['get'])
     def related(self, request, slug=None):
         """Retourne des produits similaires (même catégorie)"""
         product = self.get_object()
+        key = versioned_key('product', 'related', slug)
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
         related_products = (
             Product.objects
             .filter(category=product.category, is_available=True)
+            .select_related('category')
             .exclude(id=product.id)
             .order_by('?')[:4]  # 4 produits aléatoires
         )
         serializer = ProductListSerializer(related_products, many=True, context={'request': request})
+        cache.set(key, serializer.data, TTL_SHORT)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='images')

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .image_utils import webp_path_for
 from .models import Category, Product, ProductImage
 
 
@@ -9,17 +10,34 @@ def _absolute_image_url(obj, request):
     return request.build_absolute_uri(obj.image.url) if request else obj.image.url
 
 
+def _absolute_webp_url(obj, request):
+    """URL du variant WebP genere a l'upload, si present (voir signals.py) ;
+    None sinon — le front retombe alors sur image_url."""
+    if not obj.image:
+        return None
+    webp_name = webp_path_for(obj.image)
+    storage = obj.image.storage
+    if not webp_name or not storage.exists(webp_name):
+        return None
+    url = storage.url(webp_name)
+    return request.build_absolute_uri(url) if request else url
+
+
 class ProductImageSerializer(serializers.ModelSerializer):
     """Une image de la galerie d'un produit"""
     url = serializers.SerializerMethodField()
+    url_webp = serializers.SerializerMethodField()
     is_primary = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductImage
-        fields = ['id', 'url', 'alt_text', 'is_primary', 'order']
+        fields = ['id', 'url', 'url_webp', 'alt_text', 'is_primary', 'order']
 
     def get_url(self, obj):
         return _absolute_image_url(obj, self.context.get('request'))
+
+    def get_url_webp(self, obj):
+        return _absolute_webp_url(obj, self.context.get('request'))
 
     def get_is_primary(self, obj):
         return obj.order == 0
@@ -41,6 +59,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     category = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    image_url_webp = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
     in_stock = serializers.BooleanField(read_only=True)
 
@@ -48,7 +67,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'slug',
-            'price', 'image_url', 'thumbnail_url',
+            'price', 'image_url', 'image_url_webp', 'thumbnail_url',
             'stock', 'in_stock', 'is_available',
             'category_name', 'category',
         ]
@@ -59,6 +78,10 @@ class ProductListSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         """Retourne l'URL complète de l'image"""
         return _absolute_image_url(obj, self.context.get('request'))
+
+    def get_image_url_webp(self, obj):
+        """Variante WebP (plus legere) si elle a ete generee, sinon None"""
+        return _absolute_webp_url(obj, self.context.get('request'))
 
     def get_thumbnail_url(self, obj):
         """Retourne l'URL de l'image (pas de miniature dédiée)"""
@@ -74,6 +97,7 @@ class ProductSerializer(serializers.ModelSerializer):
         write_only=True
     )
     image_url = serializers.SerializerMethodField()
+    image_url_webp = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
     medium_image_url = serializers.SerializerMethodField()
     large_image_url = serializers.SerializerMethodField()
@@ -86,7 +110,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'description',
             'price', 'stock', 'in_stock', 'is_available',
             'category', 'category_id',
-            'image', 'image_url', 'thumbnail_url',
+            'image', 'image_url', 'image_url_webp', 'thumbnail_url',
             'medium_image_url', 'large_image_url', 'images',
             'created_at', 'updated_at'
         ]
@@ -94,10 +118,14 @@ class ProductSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'image': {'write_only': True}
         }
-    
+
     def get_image_url(self, obj):
         """URL originale de l'image"""
         return _absolute_image_url(obj, self.context.get('request'))
+
+    def get_image_url_webp(self, obj):
+        """Variante WebP (plus legere) si elle a ete generee, sinon None"""
+        return _absolute_webp_url(obj, self.context.get('request'))
 
     def get_thumbnail_url(self, obj):
         """Pas de miniature dédiée : renvoie l'image originale"""
