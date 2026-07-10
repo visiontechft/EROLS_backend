@@ -5,7 +5,7 @@ from django.db.models import OuterRef, Subquery
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .cache import TTL_DETAIL, TTL_MEDIUM, TTL_SHORT, versioned_key
+from .cache import TTL_DETAIL, TTL_MEDIUM, TTL_SHORT, bump_cache_version, versioned_key
 from .models import Category, Product, ProductImage
 from .permissions import IsStaffOrReadOnly
 from .serializers import (
@@ -341,17 +341,24 @@ class ProductViewSet(viewsets.ModelViewSet):
             except InvalidOperation:
                 return Response({'error': 'max_price invalide'}, status=400)
 
-        updated = 0
-        for product in queryset:
+        # bulk_update() issues a small number of SQL statements instead of one
+        # UPDATE per product (and per-product post_save signals) — individual
+        # .save() calls over a few hundred products was slow enough to trip
+        # the frontend's request timeout, leaving the run half-applied.
+        to_update = []
+        for product in queryset.only('id', 'price'):
             if mode == 'percent':
                 new_price = product.price * (Decimal('1') + value / Decimal('100'))
             else:
                 new_price = product.price + value
             product.price = max(new_price, Decimal('0')).quantize(Decimal('1'))
-            product.save(update_fields=['price'])
-            updated += 1
+            to_update.append(product)
 
-        return Response({'updated': updated})
+        Product.objects.bulk_update(to_update, ['price'], batch_size=200)
+        if to_update:
+            bump_cache_version()
+
+        return Response({'updated': len(to_update)})
 
     @action(detail=False, methods=['post'], url_path='bulk-price-tiers')
     def bulk_price_tiers(self, request):
@@ -387,14 +394,21 @@ class ProductViewSet(viewsets.ModelViewSet):
         if category_id:
             queryset = queryset.filter(category_id=category_id)
 
-        updated = 0
-        for product in queryset:
+        to_update = []
+        for product in queryset.only('id', 'price'):
             price = product.price
             for min_price, max_price, bonus in tiers:
                 if (min_price is None or price >= min_price) and (max_price is None or price <= max_price):
                     product.price = max(price + bonus, Decimal('0')).quantize(Decimal('1'))
-                    product.save(update_fields=['price'])
-                    updated += 1
+                    to_update.append(product)
                     break
 
-        return Response({'updated': updated})
+        # bulk_update() in one/few SQL statements instead of one .save() per
+        # product — the previous per-row loop was slow enough on ~300
+        # products to trip the frontend's request timeout mid-run, leaving
+        # some products bumped and others not.
+        Product.objects.bulk_update(to_update, ['price'], batch_size=200)
+        if to_update:
+            bump_cache_version()
+
+        return Response({'updated': len(to_update)})
