@@ -30,7 +30,7 @@ PRODUCTS = [
         'slug': 'ampoule-led-tntorch-four-circle-ufo-light-60w',
         'category': 'electronique',
         'description': "Ampoule LED UFO 4 panneaux TNTORCH, 60W, 6500K, jusqu'à 90% d'économie d'énergie, culot à visser standard.",
-        'price': 2500,
+        'price': 3500,  # 2500 + 1000 (barème 1500-3999)
         'images': ['ampoule-led-tntorch-four-circle-ufo-light-60w-1.jpg'],
     },
     {
@@ -38,7 +38,7 @@ PRODUCTS = [
         'slug': 'papier-peint-autocollant-marbre-3m-x-1-20m',
         'category': 'materiaux-revetements',
         'description': "Rouleau de papier peint autocollant effet marbre doré, 3m x 1,20m, pose facile sans colle.",
-        'price': 7000,
+        'price': 9000,  # 7000 + 2000 (barème 4000-19999)
         'images': ['papier-peint-autocollant-marbre-3m-x-1-20m-1.png'],
     },
     {
@@ -46,7 +46,7 @@ PRODUCTS = [
         'slug': 'mp3-auto-bluetooth-x33',
         'category': 'electronique',
         'description': "Transmetteur FM Bluetooth voiture avec lumière RGB, charge rapide PD, sortie 45W, écran de fréquence.",
-        'price': 1500,
+        'price': 2500,  # 1500 + 1000 (barème 1500-3999)
         'images': ['mp3-auto-bluetooth-x33-1.png'],
     },
     {
@@ -54,7 +54,7 @@ PRODUCTS = [
         'slug': 'ring-light-22-rgb-complet-avec-trepied',
         'category': 'electronique',
         'description': "Anneau lumineux LED RGB 56cm (22 pouces) avec trépied, télécommande et support téléphone.",
-        'price': 20000,
+        'price': 23000,  # 20000 + 3000 (barème 20000-49999)
         'images': ['ring-light-22-rgb-complet-avec-trepied-1.png'],
     },
     {
@@ -62,7 +62,7 @@ PRODUCTS = [
         'slug': 'ring-light-14-complet-rgb',
         'category': 'electronique',
         'description': "Anneau lumineux LED RGB 14 pouces avec trépied réglable et support téléphone rotatif.",
-        'price': 7000,
+        'price': 9000,  # 7000 + 2000 (barème 4000-19999)
         'images': ['ring-light-14-complet-rgb-1.jpg'],
     },
     {
@@ -70,7 +70,7 @@ PRODUCTS = [
         'slug': 'ring-light-12-rgb-avec-trepied',
         'category': 'electronique',
         'description': "Anneau lumineux LED RGB 12 pouces (LJJ-30) avec trépied et support téléphone.",
-        'price': 5000,
+        'price': 7000,  # 5000 + 2000 (barème 4000-19999)
         'images': ['ring-light-12-rgb-avec-trepied-1.png'],
     },
     {
@@ -78,7 +78,7 @@ PRODUCTS = [
         'slug': 'ruban-adhesif-de-masquage-rouleau',
         'category': 'materiaux-revetements',
         'description': "Ruban adhésif de masquage crêpe, haute adhérence. Vendu à l'unité (pack de 9 rouleaux disponible sur demande).",
-        'price': 400,
+        'price': 700,  # 400 + 300 (barème 0-499)
         'images': ['ruban-adhesif-de-masquage-rouleau-1.png'],
     },
     {
@@ -86,7 +86,7 @@ PRODUCTS = [
         'slug': 'power-bank-xnen-xn-743-50000mah',
         'category': 'electronique',
         'description': "Batterie externe grande capacité 50000mAh, charge rapide, écran LED, plusieurs ports de sortie.",
-        'price': 10000,
+        'price': 12000,  # 10000 + 2000 (barème 4000-19999)
         'images': [
             'power-bank-xnen-xn-743-50000mah-1.png',
             'power-bank-xnen-xn-743-50000mah-2.png',
@@ -97,7 +97,7 @@ PRODUCTS = [
         'slug': 'support-telephone-gimbal-stabilisateur-q31',
         'category': 'electronique',
         'description': "Stabilisateur gimbal pour smartphone, moteur brushless, trépied intégré, compatible iOS/Android.",
-        'price': 9000,
+        'price': 11000,  # 9000 + 2000 (barème 4000-19999)
         'images': ['support-telephone-gimbal-stabilisateur-q31-1.png'],
     },
     {
@@ -105,7 +105,7 @@ PRODUCTS = [
         'slug': 'support-telephone-gimbal-q515-tk',
         'category': 'electronique',
         'description': "Perche à selfie gimbal stabilisateur avec télécommande sans fil, hauteur 1,01m, port USB-C.",
-        'price': 12000,
+        'price': 14000,  # 12000 + 2000 (barème 4000-19999)
         'images': ['support-telephone-gimbal-q515-tk-1.jpg'],
     },
     {
@@ -113,7 +113,7 @@ PRODUCTS = [
         'slug': 'casque-bluetooth-pliable-p39',
         'category': 'electronique',
         'description': "Casque Bluetooth sans fil pliable, disponible en plusieurs coloris pastel.",
-        'price': 2000,
+        'price': 3000,  # 2000 + 1000 (barème 1500-3999)
         'images': [
             'casque-bluetooth-pliable-p39-1.png',
             'casque-bluetooth-pliable-p39-2.png',
@@ -124,7 +124,7 @@ PRODUCTS = [
         'slug': 'rallonge-multiprise-ingelec-5-trous',
         'category': 'electronique',
         'description': "Multiprise parasurtenseur 3600W/250V, 5 sorties, interrupteur lumineux.",
-        'price': 2000,
+        'price': 3000,  # 2000 + 1000 (barème 1500-3999)
         'images': ['rallonge-multiprise-ingelec-5-trous-1.png'],
     },
     {
@@ -132,7 +132,7 @@ PRODUCTS = [
         'slug': 'tensiometre-electronique-arm-style',
         'category': 'electronique',
         'description': "Tensiomètre électronique de bras avec écran LCD, mesure automatique, brassard réglable 22-32cm.",
-        'price': 3000,
+        'price': 4000,  # 3000 + 1000 (barème 1500-3999)
         'images': ['tensiometre-electronique-arm-style-1.png'],
     },
     {
@@ -140,7 +140,7 @@ PRODUCTS = [
         'slug': 'torche-rechargeable-zoom-telescopique-636-3',
         'category': 'electronique',
         'description': "Lampe torche rechargeable zoom télescopique, mousqueton intégré, port USB-C.",
-        'price': 1500,
+        'price': 2500,  # 1500 + 1000 (barème 1500-3999)
         'images': ['torche-rechargeable-zoom-telescopique-636-3-1.png'],
     },
     {
@@ -148,7 +148,7 @@ PRODUCTS = [
         'slug': 'cordon-usb-8600-long',
         'category': 'electronique',
         'description': "Cordon de charge/données USB, longueur standard, plusieurs coloris.",
-        'price': 300,
+        'price': 600,  # 300 + 300 (barème 0-499)
         'images': ['cordon-usb-8600-long-1.jpg'],
     },
     {
@@ -156,7 +156,7 @@ PRODUCTS = [
         'slug': 'cordon-usb-type-c-long',
         'category': 'electronique',
         'description': "Cordon de charge/données USB Type-C, longueur renforcée, plusieurs coloris.",
-        'price': 400,
+        'price': 700,  # 400 + 300 (barème 0-499)
         'images': ['cordon-usb-type-c-long-1.png'],
     },
     {
@@ -164,7 +164,7 @@ PRODUCTS = [
         'slug': 'souris-usb-optique-filaire',
         'category': 'electronique',
         'description': "Souris optique filaire USB, molette de défilement, compatible tous PC.",
-        'price': 500,
+        'price': 1000,  # 500 + 500 (barème 500-1499)
         'images': ['souris-usb-optique-filaire-1.png'],
     },
     {
@@ -172,7 +172,7 @@ PRODUCTS = [
         'slug': 'piles-duracell-plus-aa-x4',
         'category': 'electronique',
         'description': "Pack de 4 piles alcalines Duracell Plus AA, +100% de durée de vie.",
-        'price': 500,
+        'price': 1000,  # 500 + 500 (barème 500-1499)
         'images': ['piles-duracell-plus-aa-x4-1.png'],
     },
     {
@@ -180,7 +180,7 @@ PRODUCTS = [
         'slug': 'jeu-de-tournevis-de-precision-toolux',
         'category': 'maison-decoration',
         'description': "Coffret tournevis de précision avec embouts multiples et douilles, mallette de rangement.",
-        'price': 3500,
+        'price': 4500,  # 3500 + 1000 (barème 1500-3999)
         'images': ['jeu-de-tournevis-de-precision-toolux-1.png'],
     },
     {
@@ -188,7 +188,7 @@ PRODUCTS = [
         'slug': 'batterie-solaire-cclamp-12v-7ah',
         'category': 'electronique',
         'description': "Batterie solaire rechargeable scellée 12V/7AH, pour kit solaire ou éclairage d'urgence.",
-        'price': 4000,
+        'price': 6000,  # 4000 + 2000 (barème 4000-19999)
         'images': ['batterie-solaire-cclamp-12v-7ah-1.png'],
     },
     {
@@ -196,7 +196,7 @@ PRODUCTS = [
         'slug': 'torche-rechargeable-cob-avec-crochet',
         'category': 'electronique',
         'description': "Lampe torche rechargeable avec bande LED COB latérale, mousqueton, port USB-C.",
-        'price': 1000,
+        'price': 1500,  # 1000 + 500 (barème 500-1499)
         'images': ['torche-rechargeable-cob-avec-crochet-1.png'],
     },
     {
@@ -204,7 +204,7 @@ PRODUCTS = [
         'slug': 'support-telephone-selfie-stick-k28',
         'category': 'electronique',
         'description': "Perche à selfie pliable avec trépied, compatible streaming double téléphone.",
-        'price': 6500,
+        'price': 8500,  # 6500 + 2000 (barème 4000-19999)
         'images': ['support-telephone-selfie-stick-k28-1.jpg'],
     },
 ]
